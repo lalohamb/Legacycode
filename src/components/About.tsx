@@ -50,19 +50,7 @@ const About: React.FC = () => {
               bio="Tech Engineer passionate about preserving family histories"
               imageUrl="../Dist/img/lalo.png"
             />
-            <TeamMember
-              name="Marcus Rodriguez"
-              role="Head of Engineering"
-              bio="Cryptography expert with 15 years of security experience"
-              imageUrl="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg"
-            />
-            <TeamMember
-              name="Aisha Patel"
-              role="Head of Product"
-              bio="UX specialist focused on making technology accessible to all"
-              imageUrl="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg"
-            />
-          </div>
+           </div>
         </div>
 
         {/* Story Section */}
