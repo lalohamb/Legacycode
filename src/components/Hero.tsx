@@ -1,10 +1,15 @@
 import React from 'react';
-import { Lock, Shield, Key, Clock, Heart, Users, Star, ArrowRight } from 'lucide-react';
+import { Lock, Shield, Key, Clock, Heart, Users, Star, ArrowRight, RefreshCw, LogOut } from 'lucide-react';
 import Button from './Button';
 import { useNavigate } from 'react-router-dom';
+import { useAccount, useDisconnect } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { open } = useWeb3Modal();
 
   const handleCreateCapsule = () => {
     navigate('/create');
@@ -12,6 +17,30 @@ const Hero: React.FC = () => {
 
   const handleExploreCapsules = () => {
     navigate('/capsule-types');
+  };
+
+  const handleWalletRefresh = async () => {
+    try {
+      if (isConnected) {
+        await disconnect();
+        // Small delay to ensure disconnect completes
+        setTimeout(() => {
+          open();
+        }, 500);
+      } else {
+        await open();
+      }
+    } catch (error) {
+      console.error('Error refreshing wallet connection:', error);
+    }
+  };
+
+  const handleWalletDisconnect = async () => {
+    try {
+      await disconnect();
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+    }
   };
 
   return (
@@ -101,6 +130,39 @@ const Hero: React.FC = () => {
                   <span className="text-sm font-medium">Family Focused</span>
                 </div>
               </div>
+
+              {/* Wallet Status and Controls */}
+              {isConnected && (
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-8 border border-white/20 animate-fade-in-delay">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></div>
+                      <div>
+                        <p className="text-white font-medium">Wallet Connected</p>
+                        <p className="text-blue-200 text-sm font-mono">
+                          {address?.slice(0, 6)}...{address?.slice(-4)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleWalletRefresh}
+                        className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                        title="Refresh wallet connection"
+                      >
+                        <RefreshCw className="h-4 w-4 text-white" />
+                      </button>
+                      <button
+                        onClick={handleWalletDisconnect}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
+                        title="Disconnect wallet"
+                      >
+                        <LogOut className="h-4 w-4 text-red-300" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mb-12 animate-fade-in-delay-2">
                 <Button 

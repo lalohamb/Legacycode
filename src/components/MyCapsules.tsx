@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Hash, ExternalLink, Eye, Lock, Unlock, Calendar, User, RefreshCw, Search, Filter, Database, Send, Loader2, CheckCircle, Wallet, Info, X } from 'lucide-react';
+import { Hash, ExternalLink, Eye, Lock, Unlock, Calendar, User, RefreshCw, Search, Filter, Database, Send, Loader2, CheckCircle, Wallet, Info, X, WalletIcon } from 'lucide-react';
 import Button from './Button';
 import { useSupabaseCapsules } from '../hooks/useSupabaseCapsules';
 import { SupabaseCapsuleService } from '../lib/supabase';
 import { getIPFSGatewayURL } from '../utils/pinataService';
 import { useCapsuleContract } from '../hooks/useCapsuleContract';
 import { useAccount } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 const MyCapsules: React.FC = () => {
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
+  const { open } = useWeb3Modal();
   const { capsules, loading, error, refetch, searchCapsules, filterByUnlockMethod, clearFilters } = useSupabaseCapsules();
   const { transferCapsule, isTransferring, isSuccess, txHash } = useCapsuleContract();
   
@@ -31,6 +33,71 @@ const MyCapsules: React.FC = () => {
 
   // MetaMask import guide states
   const [showMetaMaskGuide, setShowMetaMaskGuide] = useState<{[key: number]: boolean}>({});
+
+  // Show wallet connection prompt if not connected
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto px-4 pt-32 pb-20">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 border border-blue-200">
+            <div className="inline-block p-4 bg-blue-100 rounded-full mb-6">
+              <WalletIcon className="h-12 w-12 text-blue-600" />
+            </div>
+            
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Connect Your Wallet
+            </h1>
+            
+            <p className="text-lg text-gray-600 mb-8">
+              To view and manage your NFT capsules, please connect your Web3 wallet first.
+            </p>
+            
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center justify-center text-sm text-gray-600">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span>View your created capsules</span>
+              </div>
+              <div className="flex items-center justify-center text-sm text-gray-600">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span>Transfer NFT ownership</span>
+              </div>
+              <div className="flex items-center justify-center text-sm text-gray-600">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span>Search and filter your capsules</span>
+              </div>
+              <div className="flex items-center justify-center text-sm text-gray-600">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span>Import NFTs to MetaMask</span>
+              </div>
+            </div>
+            
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => open()}
+              className="mb-6"
+            >
+              <WalletIcon className="h-5 w-5 mr-2" />
+              Connect Wallet
+            </Button>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-4">
+                Don't have any capsules yet?
+              </p>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => navigate('/create')}
+              >
+                Create Your First Capsule
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getUnlockMethodDisplayName = (method: string) => {
     const names = {
@@ -205,6 +272,9 @@ const MyCapsules: React.FC = () => {
                 ? 'Enhanced with Supabase indexing for fast loading and search'
                 : 'Manage and view your legacy NFT capsules stored on the blockchain'
               }
+            </p>
+            <p className="text-sm text-blue-600 mt-1">
+              Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
             </p>
           </div>
           <div className="flex space-x-4">
