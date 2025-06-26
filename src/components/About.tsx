@@ -43,7 +43,7 @@ const About: React.FC = () => {
         {/* Team Section */}
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 mb-20">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Meet the Creator</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
             <TeamMember
               name="Edward Hambrick"
               role="Founder & CEO"
