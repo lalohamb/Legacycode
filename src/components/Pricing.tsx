@@ -7,9 +7,74 @@ import { useCapsuleContract } from '../hooks/useCapsuleContract';
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
-  const { getMintingFee, getFeeRecipient } = useCapsuleContract();
-  const { data: mintingFee } = getMintingFee();
-  const { data: feeRecipient } = getFeeRecipient();
+  const contractHook = useCapsuleContract();
+  
+  // Safely access contract functions with null checks
+  const getMintingFee = contractHook?.getMintingFee;
+  const getFeeRecipient = contractHook?.getFeeRecipient;
+  
+  const mintingFeeData = getMintingFee ? getMintingFee() : { data: null };
+  const feeRecipientData = getFeeRecipient ? getFeeRecipient() : { data: null };
+
+  const mintingFee = mintingFeeData?.data;
+  const feeRecipient = feeRecipientData?.data;
+
+  // Show setup message if contract is not configured
+  if (!contractHook || contractHook.error) {
+    return (
+      <div className="pt-32 pb-20 bg-gradient-to-b from-white to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 mb-8">
+              <div className="inline-block p-4 bg-yellow-100 rounded-full mb-6">
+                <Coins className="h-12 w-12 text-yellow-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Contract Setup Required
+              </h1>
+              <p className="text-lg text-gray-700 mb-6">
+                To view pricing information, please complete the following setup steps:
+              </p>
+              
+              <div className="bg-white rounded-xl p-6 text-left space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Start Hardhat Node</h3>
+                    <p className="text-gray-600 text-sm">Run <code className="bg-gray-100 px-2 py-1 rounded">npx hardhat node</code> in a terminal</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">2</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Deploy Contract</h3>
+                    <p className="text-gray-600 text-sm">Run <code className="bg-gray-100 px-2 py-1 rounded">npm run deploy:capsule:hardhat</code> in another terminal</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">3</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Update Environment</h3>
+                    <p className="text-gray-600 text-sm">Copy the contract address to <code className="bg-gray-100 px-2 py-1 rounded">VITE_CONTRACT_ADDRESS</code> in your .env file</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">4</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Restart Development Server</h3>
+                    <p className="text-gray-600 text-sm">Restart your dev server to load the new environment variables</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-32 pb-20 bg-gradient-to-b from-white to-blue-50">
@@ -39,7 +104,7 @@ const Pricing: React.FC = () => {
             
             <div className="bg-white/10 rounded-xl p-6 mb-6">
               <div className="text-5xl font-bold mb-2">
-                {mintingFee ? formatEther(mintingFee) : '0.01'} ETH
+                {mintingFee ? formatEther(mintingFee) : '0.005'} ETH
               </div>
               <div className="text-blue-100 text-lg">per NFT capsule created</div>
               {!mintingFee && (
