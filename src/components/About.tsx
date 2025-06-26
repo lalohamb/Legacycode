@@ -64,7 +64,7 @@ const About: React.FC = () => {
               What started as a personal project to preserve family histories has grown into a global platform trusted by thousands of users to safeguard their most precious memories and life lessons for future generations.
             </p>
             <p>
-              Today, we're proud to be at the forefront of digital legacy preservation, combining cutting-edge technology with a deep understanding of what makes human connections meaningful across generations.
+              Today, we're proud to be at the forefront of Web3 digital legacy preservation, combining cutting-edge technology with a deep understanding of what makes human connections meaningful across generations.
             </p>
           </div>
         </div>
