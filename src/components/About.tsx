@@ -50,7 +50,7 @@ const About: React.FC = () => {
               bio="Tech Engineer passionate about preserving family histories"
               imageUrl="../Dist/img/lalo.png"
             />
-           </div>
+          </div>
         </div>
 
         {/* Story Section */}
