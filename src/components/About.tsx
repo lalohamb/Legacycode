@@ -43,12 +43,12 @@ const About: React.FC = () => {
         {/* Team Section */}
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 mb-20">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Meet the Creator</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
+          <div className="flex justify-center">
             <TeamMember
               name="Edward Hambrick"
               role="Founder & CEO"
               bio="Tech Engineer passionate about preserving family histories"
-              imageUrl="../src/img/lalo.png"
+              imageUrl="/img/lalo.png"
             />
           </div>
         </div>
@@ -58,7 +58,7 @@ const About: React.FC = () => {
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">My Story</h2>
           <div className="prose prose-lg mx-auto text-gray-600">
             <p className="mb-6">
-              LegacyCode was born from a simple yet powerful idea: that the wisdom and experiences of our loved ones are too precious to be lost to time. As founder, I was inspired to create LegacyCode after attending multi funerals of family elders who only keep family records through polaroid pictures, paper obituraries, food recipies, old leher grandmother and realizing how many untold stories and pieces of wisdom were sucpetable to lost with the generation inheirting these important pieces of fmaily legacies.
+              LegacyCode was born from a simple yet powerful idea: that the wisdom and experiences of our loved ones are too precious to be lost to time. As founder, I was inspired to create LegacyCode after attending multiple funerals of family elders who only kept family records through polaroid pictures, paper obituaries, food recipes, old letters from grandmother and realizing how many untold stories and pieces of wisdom were susceptible to being lost with the generation inheriting these important pieces of family legacies.
             </p>
             <p className="mb-6">
               What started as a personal project to preserve family histories has grown into a global platform trusted by thousands of users to safeguard their most precious memories and life lessons for future generations.
@@ -124,15 +124,19 @@ const TeamMember: React.FC<{
   imageUrl: string;
 }> = ({ name, role, bio, imageUrl }) => {
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg">
+    <div className="bg-white rounded-xl p-8 border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg max-w-md">
       <img
         src={imageUrl}
         alt={name}
-        className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+        className="w-40 h-40 rounded-full mx-auto mb-6 object-cover border-4 border-blue-100"
+        onError={(e) => {
+          console.error('Failed to load image:', imageUrl);
+          e.currentTarget.style.display = 'none';
+        }}
       />
-      <h3 className="text-xl font-semibold text-gray-900 text-center mb-1">{name}</h3>
-      <p className="text-blue-600 text-center text-sm mb-3">{role}</p>
-      <p className="text-gray-600 text-center text-sm">{bio}</p>
+      <h3 className="text-2xl font-semibold text-gray-900 text-center mb-2">{name}</h3>
+      <p className="text-blue-600 text-center text-lg mb-4">{role}</p>
+      <p className="text-gray-600 text-center leading-relaxed">{bio}</p>
     </div>
   );
 };
