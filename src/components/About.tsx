@@ -48,7 +48,7 @@ const About: React.FC = () => {
               name="Edward Hambrick"
               role="Founder & CEO"
               bio="Tech Engineer passionate about preserving family histories"
-              imageUrl="../Dist/img/lalo.png"
+              imageUrl="../img/lalo.png"
             />
           </div>
         </div>
