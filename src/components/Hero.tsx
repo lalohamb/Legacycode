@@ -142,11 +142,11 @@ const Hero: React.FC = () => {
 
             {/* Right column - Visual showcase */}
             <div className="relative">
-              {/* Main showcase image */}
+              {/* Main showcase image - Updated to family photo album */}
               <div className="relative rounded-2xl overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-500">
                 <img 
-                  src="https://images.pexels.com/photos/1128678/pexels-photo-1128678.jpeg?auto=compress&cs=tinysrgb&w=800" 
-                  alt="Family gathering creating memories" 
+                  src="https://images.pexels.com/photos/1128317/pexels-photo-1128317.jpeg?auto=compress&cs=tinysrgb&w=800" 
+                  alt="Family photo album with precious memories" 
                   className="w-full h-96 object-cover shadow-2xl"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
