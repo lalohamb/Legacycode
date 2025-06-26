@@ -1,8 +1,15 @@
 import React from 'react';
 import { Users, Heart, Globe, Award, BookOpen, Coffee } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Button from './Button';
 
 const About: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleStartLegacy = () => {
+    navigate('/create');
+  };
+
   return (
     <div className="pt-32 pb-20">
       <div className="container mx-auto px-4">
@@ -79,6 +86,7 @@ const About: React.FC = () => {
             variant="primary"
             size="lg"
             icon={true}
+            onClick={handleStartLegacy}
             className="inline-flex"
           >
             Start Your Legacy
