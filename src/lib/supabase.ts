@@ -49,10 +49,10 @@ export interface UpdateUserCapsule {
 // Supabase service functions
 export class SupabaseCapsuleService {
   
-  // Insert a new capsule into Supabase
+  // Insert or update a capsule in Supabase (upsert to handle duplicates)
   static async insertCapsule(capsule: InsertUserCapsule): Promise<UserCapsule | null> {
     try {
-      console.log('🔍 [DEBUG] Supabase - insertCapsule called with:', {
+      console.log('🔍 [DEBUG] Supabase - insertCapsule (upsert) called with:', {
         capsule,
         capsuleId: capsule.id,
         ownerAddress: capsule.owner_address
@@ -70,16 +70,21 @@ export class SupabaseCapsuleService {
         recipient_address: capsule.recipient_address?.toLowerCase()
       };
       
-      console.log('🔍 [DEBUG] Supabase - Normalized capsule data:', normalizedCapsule);
+      console.log('🔍 [DEBUG] Supabase - Normalized capsule data for upsert:', normalizedCapsule);
       
+      // Use upsert to handle duplicate key conflicts
+      // This will insert if the record doesn't exist, or update if it does
       const { data, error } = await supabase
         .from('user_capsules')
-        .insert(normalizedCapsule)
+        .upsert(normalizedCapsule, {
+          onConflict: 'id', // Specify the conflict column (primary key)
+          ignoreDuplicates: false // We want to update existing records, not ignore them
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('❌ [DEBUG] Supabase - Error inserting capsule:', {
+        console.error('❌ [DEBUG] Supabase - Error upserting capsule:', {
           error,
           code: error.code,
           message: error.message,
@@ -89,10 +94,10 @@ export class SupabaseCapsuleService {
         throw error;
       }
 
-      console.log('✅ [DEBUG] Supabase - Capsule inserted successfully:', data);
+      console.log('✅ [DEBUG] Supabase - Capsule upserted successfully:', data);
       return data;
     } catch (error) {
-      console.error('❌ [DEBUG] Supabase - Failed to insert capsule:', {
+      console.error('❌ [DEBUG] Supabase - Failed to upsert capsule:', {
         error,
         errorMessage: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -337,6 +342,69 @@ export class SupabaseCapsuleService {
     }
   }
 
+  // Batch upsert multiple capsules (useful for syncing blockchain data)
+  static async batchUpsertCapsules(capsules: InsertUserCapsule[]): Promise<UserCapsule[]> {
+    try {
+      console.log('🔍 [DEBUG] Supabase - batchUpsertCapsules called with:', {
+        count: capsules.length,
+        capsuleIds: capsules.map(c => c.id)
+      });
+      
+      if (capsules.length === 0) {
+        return [];
+      }
+      
+      // Normalize all capsules
+      const normalizedCapsules = capsules.map(capsule => ({
+        ...capsule,
+        owner_address: capsule.owner_address.toLowerCase(),
+        recipient_address: capsule.recipient_address?.toLowerCase()
+      }));
+      
+      const { data, error } = await supabase
+        .from('user_capsules')
+        .upsert(normalizedCapsules, {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
+        .select();
+
+      if (error) {
+        console.error('❌ [DEBUG] Supabase - Error batch upserting capsules:', error);
+        throw error;
+      }
+
+      console.log(`✅ [DEBUG] Supabase - Batch upserted ${data?.length || 0} capsules successfully`);
+      return data || [];
+    } catch (error) {
+      console.error('❌ [DEBUG] Supabase - Failed to batch upsert capsules:', error);
+      return [];
+    }
+  }
+
+  // Delete a capsule (useful for cleanup or testing)
+  static async deleteCapsule(capsuleId: number): Promise<boolean> {
+    try {
+      console.log('🔍 [DEBUG] Supabase - deleteCapsule called with:', capsuleId);
+      
+      const { error } = await supabase
+        .from('user_capsules')
+        .delete()
+        .eq('id', capsuleId);
+
+      if (error) {
+        console.error('❌ [DEBUG] Supabase - Error deleting capsule:', error);
+        throw error;
+      }
+
+      console.log('✅ [DEBUG] Supabase - Capsule deleted successfully:', capsuleId);
+      return true;
+    } catch (error) {
+      console.error('❌ [DEBUG] Supabase - Failed to delete capsule:', error);
+      return false;
+    }
+  }
+
   // Check if Supabase is properly configured
   static isConfigured(): boolean {
     return !!(supabaseUrl && supabaseAnonKey);
@@ -362,6 +430,57 @@ export class SupabaseCapsuleService {
     } catch (error) {
       console.error('❌ [DEBUG] Supabase - Connection test failed:', error);
       return false;
+    }
+  }
+
+  // Get capsule statistics
+  static async getCapsuleStats(ownerAddress?: string): Promise<{
+    total: number;
+    unlocked: number;
+    locked: number;
+    byUnlockMethod: Record<string, number>;
+  }> {
+    try {
+      console.log('🔍 [DEBUG] Supabase - getCapsuleStats called with:', ownerAddress);
+      
+      let queryBuilder = supabase
+        .from('user_capsules')
+        .select('unlock_method, is_unlocked');
+
+      if (ownerAddress) {
+        queryBuilder = queryBuilder.eq('owner_address', ownerAddress.toLowerCase());
+      }
+
+      const { data, error } = await queryBuilder;
+
+      if (error) {
+        console.error('❌ [DEBUG] Supabase - Error fetching capsule stats:', error);
+        throw error;
+      }
+
+      const stats = {
+        total: data?.length || 0,
+        unlocked: data?.filter(c => c.is_unlocked).length || 0,
+        locked: data?.filter(c => !c.is_unlocked).length || 0,
+        byUnlockMethod: {} as Record<string, number>
+      };
+
+      // Count by unlock method
+      data?.forEach(capsule => {
+        const method = capsule.unlock_method;
+        stats.byUnlockMethod[method] = (stats.byUnlockMethod[method] || 0) + 1;
+      });
+
+      console.log('✅ [DEBUG] Supabase - Capsule stats calculated:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ [DEBUG] Supabase - Failed to fetch capsule stats:', error);
+      return {
+        total: 0,
+        unlocked: 0,
+        locked: 0,
+        byUnlockMethod: {}
+      };
     }
   }
 }
