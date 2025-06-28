@@ -79,11 +79,11 @@ const Hero: React.FC = () => {
           />
         </div>
 
-        {/* Digital device representing modern legacy */}
+        {/* Digital device representing modern legacy - FIXED IMAGE */}
         <div className="absolute bottom-20 right-24 w-20 h-28 rounded-lg transform -rotate-12 animate-float-delayed opacity-100">
           <img 
-            src="https://images.pexels.com/photos/147413/twitter-facebook-together-exchange-147413.jpeg?auto=compress&cs=tinysrgb&w=400" 
-            alt="Digital legacy" 
+            src="https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&w=400" 
+            alt="Digital legacy technology" 
             className="w-full h-full object-cover rounded-lg"
           />
         </div>
@@ -256,7 +256,7 @@ const Hero: React.FC = () => {
               <p className="text-blue-200 text-lg">Join thousands preserving their most precious memories</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
               <FeatureCard 
                 icon={<Heart className="h-8 w-8 text-pink-400" />}
                 title="Emotional Connection"
