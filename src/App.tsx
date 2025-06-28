@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import CreateCapsule from './components/CreateCapsule';
@@ -14,6 +14,12 @@ import About from './components/About';
 import CapsuleTypes from './components/CapsuleTypes';
 
 function App() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/create');
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -50,7 +56,10 @@ function App() {
                 
                 <div className="text-center mt-16">
                   <p className="text-lg text-gray-600 mb-4">Ready to preserve your legacy?</p>
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium py-3 px-8 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg">
+                  <button 
+                    onClick={handleGetStarted}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium py-3 px-8 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
                     Get Started Today
                   </button>
                 </div>
