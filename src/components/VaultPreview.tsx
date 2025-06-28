@@ -50,7 +50,7 @@ const VaultPreview: React.FC = () => {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [error, setError] = useState('');
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // Now exclusively for IPFS URIs
   const [capsuleId, setCapsuleId] = useState<number>(1);
   const [metadataContent, setMetadataContent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -237,6 +237,19 @@ const VaultPreview: React.FC = () => {
         const metadata = await response.json();
         setMetadataContent(metadata);
         console.log('Fetched metadata from Pinata:', metadata);
+        
+        // NEW: Extract image URIs from metadata and populate imageUrls state
+        if (metadata.properties?.image_uris && Array.isArray(metadata.properties.image_uris)) {
+          console.log('Found image URIs in metadata properties:', metadata.properties.image_uris);
+          setImageUrls(metadata.properties.image_uris);
+        } else if (metadata.image) {
+          // Fallback: use single image from metadata.image field
+          console.log('Using single image from metadata.image:', metadata.image);
+          setImageUrls([metadata.image]);
+        } else {
+          console.log('No images found in metadata');
+          setImageUrls([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching metadata from Pinata:', error);
@@ -328,23 +341,16 @@ const VaultPreview: React.FC = () => {
             const parsedUpload = JSON.parse(storedUpload);
             setUploadResult(parsedUpload);
             
+            // Use imageURIs from upload result for recently created capsules
+            if (parsedUpload.imageURIs && Array.isArray(parsedUpload.imageURIs)) {
+              console.log('Using imageURIs from upload result:', parsedUpload.imageURIs);
+              setImageUrls(parsedUpload.imageURIs);
+            }
+            
             if (parsedUpload.metadataURI) {
               setLoadingMessage('Fetching metadata from Pinata IPFS...');
               await fetchMetadata(parsedUpload.metadataURI);
             }
-          }
-
-          if (parsedCapsule.images && Array.isArray(parsedCapsule.images)) {
-            const urls = parsedCapsule.images.map((image: File) => {
-              if (image instanceof File) {
-                return URL.createObjectURL(image);
-              } else if (typeof image === 'string' && image.startsWith('data:')) {
-                return image;
-              }
-              return null;
-            }).filter(Boolean);
-            
-            setImageUrls(urls);
           }
 
           setDataLoaded(true); // Mark data as loaded
@@ -537,9 +543,10 @@ const VaultPreview: React.FC = () => {
     }
   };
 
-  // Cleanup object URLs when component unmounts
+  // Cleanup object URLs when component unmounts (no longer needed for IPFS URIs)
   useEffect(() => {
     return () => {
+      // Only cleanup blob URLs, not IPFS URIs
       imageUrls.forEach(url => {
         if (url.startsWith('blob:')) {
           URL.revokeObjectURL(url);
@@ -987,7 +994,7 @@ const VaultPreview: React.FC = () => {
         </div>
       </div>
 
-      {/* Unlocked Content Popup */}
+      {/* Unlocked Content Popup - Updated to only pass imageUrls */}
       <UnlockedContentPopup
         isVisible={showUnlockedContent}
         onClose={() => setShowUnlockedContent(false)}
@@ -999,8 +1006,7 @@ const VaultPreview: React.FC = () => {
           lifeLesson: capsuleData.lifeLesson,
           unlockMethod: unlockMethod
         }}
-        uploadResult={uploadResult}
-        imageUrls={imageUrls}
+        imageUrls={imageUrls} // Pass IPFS URIs directly
         metadataContent={metadataContent}
       />
     </>

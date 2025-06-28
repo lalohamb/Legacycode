@@ -24,6 +24,7 @@ export interface CapsuleMetadata {
     created_at: string;
     creator: string;
     recipient?: string;
+    image_uris?: string[]; // NEW: Store all image URIs for proper IPFS retrieval
   };
 }
 
@@ -301,7 +302,9 @@ export async function uploadCapsuleMetadata(
         unlock_method: unlockMethod,
         created_at: new Date().toISOString(),
         creator: creator,
-        ...(recipient && { recipient })
+        ...(recipient && { recipient }),
+        // NEW: Store all image URIs in properties for proper IPFS retrieval
+        ...(imageURIs.length > 0 && { image_uris: imageURIs })
       }
     };
 
@@ -323,7 +326,7 @@ export async function uploadCapsuleMetadata(
       });
     }
 
-    console.log('Metadata object created:', metadata);
+    console.log('Metadata object created with image URIs:', metadata);
 
     // Upload metadata to Pinata
     const metadataURI = await uploadJSONToPinata(
@@ -375,7 +378,7 @@ export async function uploadCompleteCapsule(
       contentURI = await uploadVideo(videoContent, `${title.replace(/\s+/g, '_')}_video.webm`);
     }
 
-    // Upload metadata
+    // Upload metadata with all image URIs stored in properties
     const metadataURI = await uploadCapsuleMetadata(
       title,
       description,

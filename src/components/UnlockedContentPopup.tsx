@@ -13,12 +13,7 @@ interface UnlockedContentPopupProps {
     lifeLesson?: string;
     unlockMethod: string;
   };
-  uploadResult?: {
-    metadataURI?: string;
-    contentURI?: string;
-    imageURIs: string[];
-  };
-  imageUrls?: string[];
+  imageUrls?: string[]; // Now exclusively for IPFS URIs
   metadataContent?: any;
 }
 
@@ -26,8 +21,7 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
   isVisible,
   onClose,
   capsuleData,
-  uploadResult,
-  imageUrls = [],
+  imageUrls = [], // Default to empty array
   metadataContent
 }) => {
   if (!isVisible) return null;
@@ -45,11 +39,6 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
     };
     return names[method as keyof typeof names] || method;
   };
-
-  // Determine which images to display
-  const displayImages = uploadResult?.imageURIs && uploadResult.imageURIs.length > 0 
-    ? uploadResult.imageURIs 
-    : imageUrls;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in">
@@ -123,56 +112,48 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
             </div>
           </div>
 
-          {/* Display Pinata IPFS images if available */}
-          {displayImages.length > 0 && (
+          {/* Display images from IPFS */}
+          {imageUrls.length > 0 && (
             <div className="mb-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <ImageIcon className="h-5 w-5 mr-2 text-purple-600" />
-                {uploadResult?.imageURIs ? 'Images from Pinata IPFS' : 'Attached Images'}
+                Images from IPFS
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayImages.map((uri, index) => (
+                {imageUrls.map((uri, index) => (
                   <div key={index} className="relative group">
                     <img
-                      src={uploadResult?.imageURIs ? getIPFSGatewayURL(uri) : uri}
+                      src={getIPFSGatewayURL(uri)}
                       alt={`Capsule image ${index + 1}`}
                       className="w-full h-48 object-cover rounded-lg shadow-sm border border-gray-200"
                       onError={(e) => {
-                        console.error('Failed to load image:', uri);
+                        console.error('Failed to load image from IPFS:', uri);
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 rounded-lg" />
-                    {uploadResult?.imageURIs && (
-                      <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                        IPFS
-                      </div>
-                    )}
+                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      IPFS
+                    </div>
+                    {/* Link to view full image */}
+                    <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <a 
+                        href={getIPFSGatewayURL(uri)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white bg-opacity-90 text-gray-800 text-xs px-2 py-1 rounded-full hover:bg-opacity-100 transition-all flex items-center"
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        View
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Display content from Pinata IPFS if available */}
-          {uploadResult?.contentURI && (
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <ExternalLink className="h-5 w-5 mr-2 text-green-600" />
-                Content on Pinata IPFS
-              </h4>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <a 
-                  href={getIPFSGatewayURL(uploadResult.contentURI)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 flex items-center font-medium"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Full Content on IPFS
-                </a>
-                <p className="text-blue-700 text-sm mt-2 font-mono break-all">
-                  {uploadResult.contentURI}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  <strong>🌐 IPFS Storage:</strong> These images are permanently stored on the InterPlanetary File System (IPFS) 
+                  via Pinata, ensuring they remain accessible and uncensorable forever.
                 </p>
               </div>
             </div>
@@ -214,6 +195,14 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
                     </p>
                   </div>
                 )}
+                {metadataContent.properties?.image_uris && (
+                  <div className="col-span-2">
+                    <span className="font-medium text-gray-700">Images on IPFS:</span>
+                    <p className="text-gray-600 text-xs">
+                      {metadataContent.properties.image_uris.length} image{metadataContent.properties.image_uris.length !== 1 ? 's' : ''} stored permanently
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -224,7 +213,7 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-600">
               <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-              <span>Legacy successfully unlocked and preserved</span>
+              <span>Legacy successfully unlocked and preserved on IPFS</span>
             </div>
             <button
               onClick={onClose}
