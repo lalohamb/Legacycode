@@ -1120,4 +1120,4 @@ export const legacyCapsuleABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ]  as const;
+  ] as const;
