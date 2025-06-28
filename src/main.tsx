@@ -9,7 +9,7 @@ import { walletConnect, injected, metaMask } from 'wagmi/connectors';
 import App from './App.tsx';
 import './index.css';
 
-const projectId = 'd1ea4af573dba2b84815021d46e005d4';   //'a3bee57776d04c71a56f1c621635e7ac';
+const projectId = 'd1ea4af573dba2b84815021d46e005d4';   //Web3Modal //'a3bee57776d04c71a56f1c621635e7ac';
 
 const metadata = {
   name: 'LegacyCode',
