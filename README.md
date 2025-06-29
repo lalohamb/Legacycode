@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/57b818c4-7b18-44cc-b79b-19de894896d3)
+
 # LegacyCode dApp Frontend with Pinata IPFS Integration
 
 ## Overview
