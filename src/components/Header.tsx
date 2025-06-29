@@ -98,7 +98,7 @@ const Header: React.FC = () => {
             //src="https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=400" 
             src="/img/logotext_poweredby_360w.png?auto=compress&cs=tinysrgb&w=360" 
             alt="Powered by Bolt" 
-            className="w-10 h-10 object-cover"
+            className="w-5 h-5 object-cover"
           />
       </div>
     </header>
