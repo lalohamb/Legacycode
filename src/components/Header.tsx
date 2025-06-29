@@ -96,7 +96,7 @@ const Header: React.FC = () => {
         </button>
         <img 
             //src="https://images.pexels.com/photos/261763/pexels-photo-261763.jpeg?auto=compress&cs=tinysrgb&w=400" 
-            src="/img/black_circle_360x360.png?auto=compress&cs=tinysrgb&w=360" 
+            src="/img/logotext_poweredby_360w.png?auto=compress&cs=tinysrgb&w=360" 
             alt="Powered by Bolt" 
             className="w-20 h-20 object-cover"
           />
