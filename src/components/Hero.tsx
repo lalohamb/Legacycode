@@ -1,8 +1,8 @@
-import React from 'react';
-import { Lock, Shield, Key, Clock, Heart, Users, Star, ArrowRight, RefreshCw, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { Lock, Shield, Key, Clock, Heart, Users, Star, ArrowRight, RefreshCw, LogOut, AlertTriangle, ChevronDown, ChevronUp, Network, Wallet } from 'lucide-react';
 import Button from './Button';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useChainId } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 const Hero: React.FC = () => {
@@ -10,6 +10,11 @@ const Hero: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useWeb3Modal();
+  const chainId = useChainId();
+  
+  // State for network notice dropdown
+  const [showNetworkNotice, setShowNetworkNotice] = useState(true);
+  const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
 
   const handleCreateCapsule = () => {
     navigate('/create');
@@ -43,8 +48,152 @@ const Hero: React.FC = () => {
     }
   };
 
+  // Helper function to get network name from chain ID
+  const getNetworkInfo = (chainId: number) => {
+    switch (chainId) {
+      case 11155111:
+        return { name: 'Sepolia Testnet', color: 'green', isCorrect: true };
+      case 1:
+        return { name: 'Ethereum Mainnet', color: 'red', isCorrect: false };
+      case 31337:
+        return { name: 'Hardhat Local', color: 'blue', isCorrect: true };
+      case 137:
+        return { name: 'Polygon Mainnet', color: 'red', isCorrect: false };
+      case 80001:
+        return { name: 'Polygon Mumbai', color: 'yellow', isCorrect: false };
+      default:
+        return { name: 'Unknown Network', color: 'red', isCorrect: false };
+    }
+  };
+
+  const networkInfo = getNetworkInfo(chainId);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      {/* Network Notice - Fixed at top */}
+      {showNetworkNotice && (
+        <div className="fixed top-20 left-0 right-0 z-40 mx-4">
+          <div className="max-w-4xl mx-auto">
+            <div className={`rounded-lg border-2 shadow-lg backdrop-blur-sm transition-all duration-300 ${
+              networkInfo.isCorrect 
+                ? 'bg-green-900/90 border-green-400/50' 
+                : 'bg-red-900/90 border-red-400/50'
+            }`}>
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full ${
+                      networkInfo.isCorrect ? 'bg-green-400/20' : 'bg-red-400/20'
+                    }`}>
+                      {networkInfo.isCorrect ? (
+                        <Network className="h-5 w-5 text-green-300" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-red-300" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${
+                        networkInfo.isCorrect ? 'text-green-100' : 'text-red-100'
+                      }`}>
+                        {networkInfo.isCorrect ? '✅ Correct Network' : '⚠️ Network Notice'}
+                      </h3>
+                      <p className={`text-sm ${
+                        networkInfo.isCorrect ? 'text-green-200' : 'text-red-200'
+                      }`}>
+                        {isConnected 
+                          ? `Connected to: ${networkInfo.name}` 
+                          : 'Please connect your wallet to see network status'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setIsNetworkDropdownOpen(!isNetworkDropdownOpen)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        networkInfo.isCorrect 
+                          ? 'hover:bg-green-400/20 text-green-300' 
+                          : 'hover:bg-red-400/20 text-red-300'
+                      }`}
+                    >
+                      {isNetworkDropdownOpen ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowNetworkNotice(false)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        networkInfo.isCorrect 
+                          ? 'hover:bg-green-400/20 text-green-300' 
+                          : 'hover:bg-red-400/20 text-red-300'
+                      }`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dropdown Content */}
+                {isNetworkDropdownOpen && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <h4 className="font-medium text-white mb-2 flex items-center">
+                          <Network className="h-4 w-4 mr-2" />
+                          Required Network
+                        </h4>
+                        <p className="text-green-300 font-medium">Sepolia Testnet</p>
+                        <p className="text-white/80 text-sm mt-1">Chain ID: 11155111</p>
+                      </div>
+                      
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <h4 className="font-medium text-white mb-2 flex items-center">
+                          <Wallet className="h-4 w-4 mr-2" />
+                          Required Currency
+                        </h4>
+                        <p className="text-blue-300 font-medium">Sepolia ETH (Testnet)</p>
+                        <p className="text-white/80 text-sm mt-1">Free from faucets</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-4 bg-white/10 rounded-lg">
+                      <h4 className="font-medium text-white mb-2">📋 Setup Instructions:</h4>
+                      <ol className="text-white/80 text-sm space-y-1 list-decimal list-inside">
+                        <li>Connect your wallet (MetaMask, WalletConnect, etc.)</li>
+                        <li>Switch to Sepolia Testnet in your wallet</li>
+                        <li>Get free Sepolia ETH from a faucet (search "Sepolia faucet")</li>
+                        <li>Start creating your legacy capsules!</li>
+                      </ol>
+                    </div>
+
+                    {!networkInfo.isCorrect && isConnected && (
+                      <div className="mt-4 p-4 bg-red-500/20 border border-red-400/30 rounded-lg">
+                        <p className="text-red-200 text-sm">
+                          <strong>⚠️ Wrong Network:</strong> You're connected to {networkInfo.name}. 
+                          Please switch to Sepolia Testnet in your wallet to use this application.
+                        </p>
+                      </div>
+                    )}
+
+                    {networkInfo.isCorrect && isConnected && (
+                      <div className="mt-4 p-4 bg-green-500/20 border border-green-400/30 rounded-lg">
+                        <p className="text-green-200 text-sm">
+                          <strong>✅ Perfect!</strong> You're connected to the correct network. 
+                          You can now create and manage your legacy capsules.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJ3aGl0ZSIgZmlsbC1ydWxlPSJldmVub2RkIj48Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMiIvPjwvZz48L3N2Zz4=')] animate-pulse"></div>
@@ -90,7 +239,9 @@ const Hero: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
+      <div className={`container mx-auto px-4 pb-20 relative z-10 transition-all duration-300 ${
+        showNetworkNotice ? 'pt-48' : 'pt-32'
+      }`}>
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left column - Text content */}
@@ -141,6 +292,9 @@ const Hero: React.FC = () => {
                         <p className="text-white font-medium">Wallet Connected</p>
                         <p className="text-blue-200 text-sm font-mono">
                           {address?.slice(0, 6)}...{address?.slice(-4)}
+                        </p>
+                        <p className="text-blue-300 text-xs">
+                          Network: {networkInfo.name}
                         </p>
                       </div>
                     </div>
