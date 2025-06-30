@@ -65,7 +65,7 @@ const About: React.FC = () => {
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">My Story</h2>
           <div className="prose prose-lg mx-auto text-gray-600">
             <p className="mb-6">
-              LegacyCode was born from a simple yet powerful idea: that the wisdom and experiences of our loved ones are too precious to be lost to time. As founder, I was inspired to create LegacyCode after attending multiple funerals of family elders who only kept family records through polaroid pictures, paper obituaries, food recipes, old letters from grandmother and realizing how many untold stories and pieces of wisdom were susceptible to being lost with the generation inheriting these important pieces of family legacies.
+              LegacyCode was born from a simple yet powerful idea: that the wisdom and experiences of our loved ones are too precious to be lost to time. As founder, I was inspired to create LegacyCode after attending multiple funerals of family elders who only kept family records through polaroid pictures, paper obituaries, old written recipes, precious letters from grandmother and realizing how many untold stories and pieces of wisdom were susceptible to being lost with the generation inheriting these important pieces of family legacies.
             </p>
             <p className="mb-6">
               What started as a personal project to preserve family histories has grown into a global platform trusted by thousands of users to safeguard their most precious memories and life lessons for future generations.
