@@ -39,12 +39,11 @@ const Pricing: React.FC = () => {
             
             <div className="bg-white/10 rounded-xl p-6 mb-6">
               <div className="text-5xl font-bold mb-2">
-                {mintingFee ? formatEther(mintingFee) : '0.006'} ETH
+                {mintingFee ? formatEther(mintingFee) : '0.6'} ETH
               </div>
               <div className="text-blue-100 text-lg">per NFT capsule created</div>
               {!mintingFee && (
-                <div className="text-blue-200 text-sm mt-2">
-                  *Fee shown is default. Connect to see current rate.
+                <div className="text-blue-200 text-sm mt-2">Fee shown is default. Connect to see current rate.
                 </div>
               )}
             </div>
