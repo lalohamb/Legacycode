@@ -444,7 +444,7 @@ const FinalizeCapsule: React.FC = () => {
       
       setUploadProgress('Uploading to Pinata IPFS...');
       
-      // Upload complete capsule to Pinata
+      // Upload complete capsule to Pinata with life lesson
       const uploadResult = await uploadCompleteCapsule(
         capsuleData.title,
         capsuleData.message || `${capsuleData.type} capsule: ${capsuleData.title}`,
@@ -454,7 +454,8 @@ const FinalizeCapsule: React.FC = () => {
         capsuleData.recipient || undefined,
         textContent,
         videoContent,
-        capsuleData.images
+        capsuleData.images,
+        capsuleData.lifeLesson || undefined // NEW: Pass life lesson to upload
       );
 
       console.log('Pinata upload completed:', uploadResult);
@@ -648,6 +649,18 @@ const FinalizeCapsule: React.FC = () => {
                         : capsuleData.message}
                     </p>
                   </div>
+
+                  {/* NEW: Life Lesson Display */}
+                  {capsuleData.lifeLesson && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-500 mb-1">Life Lesson or Connected Event</label>
+                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
+                        <p className="text-gray-900 italic">
+                          "{capsuleData.lifeLesson}"
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

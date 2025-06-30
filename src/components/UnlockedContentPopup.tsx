@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, CheckCircle, Sparkles, ExternalLink, Image as ImageIcon, Video, FileText, Award } from 'lucide-react';
-import { getIPFSGatewayURL } from '../utils/pinataService';
+import React, { useState, useEffect } from 'react';
+import { X, CheckCircle, Sparkles, ExternalLink, Image as ImageIcon, Video, FileText, Award, Loader2 } from 'lucide-react';
+import { getIPFSGatewayURL, fetchContentFromIPFS } from '../utils/pinataService';
 
 interface UnlockedContentPopupProps {
   isVisible: boolean;
@@ -12,6 +12,7 @@ interface UnlockedContentPopupProps {
     type: 'text' | 'video';
     lifeLesson?: string;
     unlockMethod: string;
+    contentUrl?: string; // NEW: Direct content URL from IPFS
   };
   imageUrls?: string[]; // Now exclusively for IPFS URIs
   metadataContent?: any;
@@ -24,6 +25,37 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
   imageUrls = [], // Default to empty array
   metadataContent
 }) => {
+  // NEW: State for fetching content from IPFS
+  const [actualContent, setActualContent] = useState<string>('');
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [contentError, setContentError] = useState<string>('');
+
+  // NEW: Fetch actual content from IPFS when popup opens and content URL is available
+  useEffect(() => {
+    if (isVisible && capsuleData.contentUrl && capsuleData.type === 'text' && !actualContent) {
+      const fetchContent = async () => {
+        setIsLoadingContent(true);
+        setContentError('');
+        
+        try {
+          console.log('Fetching content from IPFS URL:', capsuleData.contentUrl);
+          const content = await fetchContentFromIPFS(capsuleData.contentUrl);
+          setActualContent(content);
+          console.log('Successfully fetched content from IPFS');
+        } catch (error) {
+          console.error('Error fetching content from IPFS:', error);
+          setContentError('Failed to load content from IPFS');
+          // Fallback to the message from capsuleData
+          setActualContent(capsuleData.message);
+        } finally {
+          setIsLoadingContent(false);
+        }
+      };
+
+      fetchContent();
+    }
+  }, [isVisible, capsuleData.contentUrl, capsuleData.type, capsuleData.message, actualContent]);
+
   if (!isVisible) return null;
 
   const getMethodDisplayName = (method: string) => {
@@ -39,6 +71,9 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
     };
     return names[method as keyof typeof names] || method;
   };
+
+  // Determine what content to display
+  const displayContent = actualContent || capsuleData.message;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in">
@@ -104,12 +139,53 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
             <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <FileText className="h-5 w-5 mr-2 text-blue-600" />
               Legacy Message
+              {capsuleData.contentUrl && (
+                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  From IPFS
+                </span>
+              )}
             </h4>
+            
+            {/* Content loading state */}
+            {isLoadingContent ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+                <span className="text-gray-600">Loading content from IPFS...</span>
+              </div>
+            ) : contentError ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-yellow-800 text-sm">
+                  ⚠️ {contentError}. Showing fallback content.
+                </p>
+              </div>
+            ) : null}
+            
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {capsuleData.message}
+                {displayContent}
               </p>
             </div>
+
+            {/* Show content source info */}
+            {capsuleData.contentUrl && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  <strong>🌐 Content Source:</strong> This content was fetched directly from IPFS, ensuring permanent and decentralized storage.
+                </p>
+                <div className="mt-2 flex items-center">
+                  <span className="text-blue-700 text-xs mr-2">IPFS URI:</span>
+                  <a 
+                    href={getIPFSGatewayURL(capsuleData.contentUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-xs font-mono break-all flex items-center"
+                  >
+                    {capsuleData.contentUrl}
+                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Display images from IPFS */}
@@ -159,17 +235,27 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
             </div>
           )}
 
-          {/* Life lesson section */}
+          {/* Life lesson section - Enhanced display */}
           {capsuleData.lifeLesson && (
             <div className="border-t border-gray-200 pt-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Sparkles className="h-5 w-5 mr-2 text-yellow-500" />
-                Life Lesson
+                Life Lesson or Connected Event
               </h4>
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap italic">
-                  "{capsuleData.lifeLesson}"
-                </p>
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
+                <div className="flex items-start">
+                  <div className="bg-yellow-100 rounded-full p-2 mr-4 flex-shrink-0">
+                    <Sparkles className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-800 leading-relaxed whitespace-pre-wrap italic text-lg">
+                      "{capsuleData.lifeLesson}"
+                    </p>
+                    <div className="mt-3 text-right">
+                      <span className="text-yellow-700 text-sm font-medium">— Legacy Wisdom</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -200,6 +286,14 @@ const UnlockedContentPopup: React.FC<UnlockedContentPopupProps> = ({
                     <span className="font-medium text-gray-700">Images on IPFS:</span>
                     <p className="text-gray-600 text-xs">
                       {metadataContent.properties.image_uris.length} image{metadataContent.properties.image_uris.length !== 1 ? 's' : ''} stored permanently
+                    </p>
+                  </div>
+                )}
+                {metadataContent.properties?.content_url && (
+                  <div className="col-span-2">
+                    <span className="font-medium text-gray-700">Content on IPFS:</span>
+                    <p className="text-gray-600 text-xs font-mono break-all">
+                      {metadataContent.properties.content_url}
                     </p>
                   </div>
                 )}

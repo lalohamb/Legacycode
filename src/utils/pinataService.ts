@@ -24,7 +24,9 @@ export interface CapsuleMetadata {
     created_at: string;
     creator: string;
     recipient?: string;
-    image_uris?: string[]; // NEW: Store all image URIs for proper IPFS retrieval
+    image_uris?: string[]; // Store all image URIs for proper IPFS retrieval
+    content_url?: string; // NEW: Direct link to the main content on IPFS
+    life_lesson?: string; // NEW: Life lesson or connected event
   };
 }
 
@@ -269,7 +271,8 @@ export async function uploadCapsuleMetadata(
   creator: string,
   recipient?: string,
   contentURI?: string,
-  imageURIs: string[] = []
+  imageURIs: string[] = [],
+  lifeLesson?: string // NEW: Life lesson parameter
 ): Promise<string> {
   if (!PINATA_API_KEY || !PINATA_SECRET_API_KEY) {
     throw new Error('Pinata API credentials not configured. Please check your environment variables.');
@@ -303,8 +306,11 @@ export async function uploadCapsuleMetadata(
         created_at: new Date().toISOString(),
         creator: creator,
         ...(recipient && { recipient }),
-        // NEW: Store all image URIs in properties for proper IPFS retrieval
-        ...(imageURIs.length > 0 && { image_uris: imageURIs })
+        // Store all image URIs in properties for proper IPFS retrieval
+        ...(imageURIs.length > 0 && { image_uris: imageURIs }),
+        // NEW: Store content URL and life lesson
+        ...(contentURI && { content_url: contentURI }),
+        ...(lifeLesson && { life_lesson: lifeLesson })
       }
     };
 
@@ -326,7 +332,15 @@ export async function uploadCapsuleMetadata(
       });
     }
 
-    console.log('Metadata object created with image URIs:', metadata);
+    // Add life lesson as attribute if provided
+    if (lifeLesson) {
+      metadata.attributes.push({
+        trait_type: 'Life Lesson',
+        value: 'Included'
+      });
+    }
+
+    console.log('Metadata object created with content URL and life lesson:', metadata);
 
     // Upload metadata to Pinata
     const metadataURI = await uploadJSONToPinata(
@@ -352,7 +366,8 @@ export async function uploadCompleteCapsule(
   recipient?: string,
   textContent?: string,
   videoContent?: File | Blob,
-  images: File[] = []
+  images: File[] = [],
+  lifeLesson?: string // NEW: Life lesson parameter
 ): Promise<UploadResult> {
   if (!PINATA_API_KEY || !PINATA_SECRET_API_KEY) {
     throw new Error('Pinata API credentials not configured. Please set VITE_PINATA_API_KEY and VITE_PINATA_SECRET_API_KEY in your .env file');
@@ -378,7 +393,7 @@ export async function uploadCompleteCapsule(
       contentURI = await uploadVideo(videoContent, `${title.replace(/\s+/g, '_')}_video.webm`);
     }
 
-    // Upload metadata with all image URIs stored in properties
+    // Upload metadata with all image URIs, content URL, and life lesson
     const metadataURI = await uploadCapsuleMetadata(
       title,
       description,
@@ -387,13 +402,15 @@ export async function uploadCompleteCapsule(
       creator,
       recipient,
       contentURI,
-      imageURIs
+      imageURIs,
+      lifeLesson // NEW: Pass life lesson to metadata
     );
 
     console.log('Complete capsule upload to Pinata finished:', {
       metadataURI,
       contentURI,
-      imageURIs
+      imageURIs,
+      lifeLesson
     });
 
     return {
@@ -413,6 +430,25 @@ export function getIPFSGatewayURL(ipfsURI: string, gateway: string = 'https://ga
     return `${gateway}${ipfsURI.slice(7)}`;
   }
   return ipfsURI;
+}
+
+// NEW: Utility function to fetch content from IPFS
+export async function fetchContentFromIPFS(contentURI: string): Promise<string> {
+  try {
+    console.log('Fetching content from IPFS:', contentURI);
+    const response = await fetch(getIPFSGatewayURL(contentURI));
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const content = await response.text();
+    console.log('Content fetched from IPFS successfully');
+    return content;
+  } catch (error) {
+    console.error('Error fetching content from IPFS:', error);
+    throw new Error(`Failed to fetch content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 // Check if Pinata is properly configured

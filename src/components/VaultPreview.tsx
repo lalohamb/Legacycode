@@ -7,7 +7,7 @@ import { keccak256, toBytes, stringToHex, parseEther, formatEther } from 'viem';
 import Button from './Button';
 import UnlockedContentPopup from './UnlockedContentPopup';
 import { useCapsuleContract } from '../hooks/useCapsuleContract';
-import { getIPFSGatewayURL } from '../utils/pinataService';
+import { getIPFSGatewayURL, fetchContentFromIPFS } from '../utils/pinataService';
 import { SupabaseCapsuleService } from '../lib/supabase';
 
 interface CapsuleData {
@@ -60,6 +60,11 @@ const VaultPreview: React.FC = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showUnlockedContent, setShowUnlockedContent] = useState(false);
   const [previousUnlockState, setPreviousUnlockState] = useState(false);
+  
+  // NEW: State for fetched content
+  const [fetchedContent, setFetchedContent] = useState<string>('');
+  const [contentUrl, setContentUrl] = useState<string>('');
+  const [lifeLesson, setLifeLesson] = useState<string>('');
   
   // Single-step unlock states
   const [unlockInputs, setUnlockInputs] = useState({
@@ -238,7 +243,7 @@ const VaultPreview: React.FC = () => {
         setMetadataContent(metadata);
         console.log('Fetched metadata from Pinata:', metadata);
         
-        // NEW: Extract image URIs from metadata and populate imageUrls state
+        // Extract image URIs from metadata and populate imageUrls state
         if (metadata.properties?.image_uris && Array.isArray(metadata.properties.image_uris)) {
           console.log('Found image URIs in metadata properties:', metadata.properties.image_uris);
           setImageUrls(metadata.properties.image_uris);
@@ -250,9 +255,35 @@ const VaultPreview: React.FC = () => {
           console.log('No images found in metadata');
           setImageUrls([]);
         }
+
+        // NEW: Extract content URL and life lesson from metadata
+        if (metadata.properties?.content_url) {
+          console.log('Found content URL in metadata:', metadata.properties.content_url);
+          setContentUrl(metadata.properties.content_url);
+        }
+
+        if (metadata.properties?.life_lesson) {
+          console.log('Found life lesson in metadata:', metadata.properties.life_lesson);
+          setLifeLesson(metadata.properties.life_lesson);
+        }
       }
     } catch (error) {
       console.error('Error fetching metadata from Pinata:', error);
+    }
+  }, []);
+
+  // NEW: Function to fetch actual content from IPFS
+  const fetchActualContent = useCallback(async (contentURI: string) => {
+    if (!contentURI) return;
+    
+    try {
+      console.log('Fetching actual content from IPFS:', contentURI);
+      const content = await fetchContentFromIPFS(contentURI);
+      setFetchedContent(content);
+      console.log('Successfully fetched content from IPFS');
+    } catch (error) {
+      console.error('Error fetching content from IPFS:', error);
+      setFetchedContent('Error loading content from IPFS');
     }
   }, []);
 
@@ -432,6 +463,13 @@ const VaultPreview: React.FC = () => {
 
     loadCapsuleData();
   }, [capsuleId, dataLoaded]); // Only depend on capsuleId and dataLoaded flag
+
+  // NEW: Fetch actual content when content URL is available and capsule is unlocked
+  useEffect(() => {
+    if (contentUrl && isUnlocked && !fetchedContent) {
+      fetchActualContent(contentUrl);
+    }
+  }, [contentUrl, isUnlocked, fetchedContent, fetchActualContent]);
 
   const handleUnlockInputChange = (field: string, value: string) => {
     setUnlockInputs(prev => ({ ...prev, [field]: value }));
@@ -994,17 +1032,18 @@ const VaultPreview: React.FC = () => {
         </div>
       </div>
 
-      {/* Unlocked Content Popup - Updated to only pass imageUrls */}
+      {/* Unlocked Content Popup - Updated to pass fetched content and life lesson */}
       <UnlockedContentPopup
         isVisible={showUnlockedContent}
         onClose={() => setShowUnlockedContent(false)}
         capsuleData={{
           id: capsuleId,
           title: capsuleData.title,
-          message: capsuleData.message,
+          message: fetchedContent || capsuleData.message, // Use fetched content if available
           type: capsuleData.type,
-          lifeLesson: capsuleData.lifeLesson,
-          unlockMethod: unlockMethod
+          lifeLesson: lifeLesson || capsuleData.lifeLesson, // Use life lesson from metadata if available
+          unlockMethod: unlockMethod,
+          contentUrl: contentUrl // NEW: Pass content URL
         }}
         imageUrls={imageUrls} // Pass IPFS URIs directly
         metadataContent={metadataContent}
