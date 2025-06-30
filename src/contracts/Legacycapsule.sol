@@ -334,6 +334,6 @@ Events Added:
 - FeeRecipientUpdated: When recipient is changed
 - FeesWithdrawn: When funds are withdrawn
 
-Prepared for: Edward Hambrick
+Prepared by: Edward Hambrick
 ====================================================
 */
