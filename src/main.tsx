@@ -14,8 +14,8 @@ const projectId = 'd1ea4af573dba2b84815021d46e005d4';   //Web3Modal //'a3bee5777
 const metadata = {
   name: 'LegacyCode',
   description: 'Secure Your Wisdom for Future Generations',
-  //url: 'https://legacycode.com',
-  url:  'http://localhost:5177', //https://cloud.reown.com/ for ProjectId API
+  url: 'https://legacycode.com',
+  //url:  'http://localhost:5177', //https://cloud.reown.com/ for ProjectId API
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 };
 
